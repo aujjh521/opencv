@@ -165,48 +165,69 @@ import random
 #     cv2.waitKey(2)
 
 #%% 偵測輪廓/形狀
-img = cv2.imread('GrandmaCan_python_opencv-main/shape.jpg')
-imgContour = img.copy()
+# img = cv2.imread('GrandmaCan_python_opencv-main/shape.jpg')
+# imgContour = img.copy()
 
-#檢測輪廓不需要顏色
-img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# #檢測輪廓不需要顏色
+# img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-#邊界檢測
-canny = cv2.Canny(img, 150, 200)
+# #邊界檢測
+# canny = cv2.Canny(img, 150, 200)
 
-#抓輪廓 (把canny做完得結果傳進來抓輪廓)
-contours, hierachy = cv2.findContours(canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+# #抓輪廓 (把canny做完得結果傳進來抓輪廓)
+# contours, hierachy = cv2.findContours(canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
- #把每個輪廓畫在原本的image上面
-for i,cnt in enumerate(contours):
-    cv2.drawContours(imgContour, cnt, -1, (0,0,255), 4) #輪廓畫在原本的image上面
-    print(i)
-    area = cv2.contourArea(cnt) #輪廓面積
-    peri = cv2.arcLength(cnt,True) #輪廓周長
-    print(f'area / peri = {area} / {peri}') 
+#  #把每個輪廓畫在原本的image上面
+# for i,cnt in enumerate(contours):
+#     cv2.drawContours(imgContour, cnt, -1, (0,0,255), 4) #輪廓畫在原本的image上面
+#     print(i)
+#     area = cv2.contourArea(cnt) #輪廓面積
+#     peri = cv2.arcLength(cnt,True) #輪廓周長
+#     print(f'area / peri = {area} / {peri}') 
 
-    if area > 500: #避免看到因為雜訊出現的0 area contour
-        #近似出多邊形 (cv2.approxPolyDP回傳的是多邊形頂點的座標,所以取len之後就是近似出來的n邊形)
-        vertices = cv2.approxPolyDP(cnt, peri*0.02, True)
-        corners = len(vertices)
-        print(f'corners number = {corners}')
+#     if area > 500: #避免看到因為雜訊出現的0 area contour
+#         #近似出多邊形 (cv2.approxPolyDP回傳的是多邊形頂點的座標,所以取len之後就是近似出來的n邊形)
+#         vertices = cv2.approxPolyDP(cnt, peri*0.02, True)
+#         corners = len(vertices)
+#         print(f'corners number = {corners}')
 
-        #產生外框框住物件的舉行座標 (回傳的是外框的左上頂點座標,以及長寬)
-        #接著再畫出框框
-        x,y,w,h = cv2.boundingRect(vertices)
-        cv2.rectangle(imgContour, (x,y), (x+w,y+h), (0,0,0), 2 )
+#         #產生外框框住物件的舉行座標 (回傳的是外框的左上頂點座標,以及長寬)
+#         #接著再畫出框框
+#         x,y,w,h = cv2.boundingRect(vertices)
+#         cv2.rectangle(imgContour, (x,y), (x+w,y+h), (0,0,0), 2 )
 
-        #標記形狀的文字註解
-        if corners == 3:
-            cv2.putText(imgContour, 'Triangle', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
-        elif corners == 4:
-            cv2.putText(imgContour, 'Rectangle', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
-        elif corners == 5:
-            cv2.putText(imgContour, 'Pentagon', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
-        elif corners > 5:
-            cv2.putText(imgContour, 'circle', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
+#         #標記形狀的文字註解
+#         if corners == 3:
+#             cv2.putText(imgContour, 'Triangle', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
+#         elif corners == 4:
+#             cv2.putText(imgContour, 'Rectangle', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
+#         elif corners == 5:
+#             cv2.putText(imgContour, 'Pentagon', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
+#         elif corners > 5:
+#             cv2.putText(imgContour, 'circle', (x,y-8), cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), 2) #文字註解
+
+# cv2.imshow('img', img)
+# cv2.imshow('canny', canny)
+# cv2.imshow('imgContour', imgContour)
+# cv2.waitKey(0)
+
+#%% 人臉定位 (這邊不是真的做人臉分類,比較像是從圖片中找到人臉的位置)
+
+img = cv2.imread('GrandmaCan_python_opencv-main/lenna.jpg')
+
+#人臉定位不需要彩色
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+#直接從opencv 的github上面找已經訓練過的model(.xml)
+faceCascade = cv2.CascadeClassifier('GrandmaCan_python_opencv-main/face_detect.xml')
+
+#調用偵測的function, 回傳的會是偵測到的全部框框
+faceRect = faceCascade.detectMultiScale(img, 1.1, 3)
+print(f'total face number = {len(faceRect)}')
+
+#把框框標上去
+for (x,y,w,h) in faceRect:
+    cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
 
 cv2.imshow('img', img)
-cv2.imshow('canny', canny)
-cv2.imshow('imgContour', imgContour)
 cv2.waitKey(0)
